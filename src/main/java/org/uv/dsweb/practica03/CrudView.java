@@ -19,7 +19,7 @@ import org.primefaces.PrimeFaces;
  * @author juan
  */
 @Named(value = "crudView")
-@RequestScoped
+@SessionScoped
 public class CrudView implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -36,10 +36,10 @@ public class CrudView implements Serializable {
         this.userService = new UserDao();
         this.users = this.userService.findAll();
         this.selectedUsers = new ArrayList<User>();
-        this.selectedUser = new User();
     }
 
     public List<User> getUsers() {
+        this.users = this.userService.findAll();
         return this.users;
     }
 
@@ -64,22 +64,20 @@ public class CrudView implements Serializable {
     }
 
     public void saveUser() {
-        System.out.println("USER: "+this.selectedUser);
-        System.out.println("USER ID: "+this.selectedUser.getId());
         if(this.selectedUser.getId()== 0){
             this.userService.create(this.selectedUser);
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Product Added"));
         }
         else {
+            this.userService.update(this.selectedUser, this.selectedUser.getId());
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Product Updated"));
         }
 
-        /*PrimeFaces.current().executeScript("PF('manageProductDialog').hide()");
-        PrimeFaces.current().ajax().update("form:messages", "form:dt-products");*/
+        PrimeFaces.current().executeScript("PF('manageProductDialog').hide()");
+        PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
     }
 
     public void deleteUser() {
-        System.out.println("USER: "+this.selectedUser);
         this.users.remove(this.selectedUser);
         this.userService.delete(this.selectedUser.getId());
         this.selectedUsers.remove(this.selectedUser);
@@ -102,11 +100,14 @@ public class CrudView implements Serializable {
     }
 
     public void deleteSelectedUsers() {
-        /*this.products.removeAll(this.selectedProducts);
-        this.selectedProducts = null;
+        this.users.removeAll(this.selectedUsers);
+        for(User item:this.selectedUsers){
+            this.userService.delete(item.getId());
+        }
+        this.selectedUsers = null;
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Products Removed"));
         PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
-        PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");*/
+        PrimeFaces.current().executeScript("PF('dtProducts').clearFilters()");
     }
     
 }
